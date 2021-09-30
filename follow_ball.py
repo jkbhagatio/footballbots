@@ -51,7 +51,8 @@ def get_ball(rgb_img, detect='edge', preprocess='thresh', plot=False):
             # plt.imshow(edge_mask, 'Blues')
             print(votes.dtype)
             plt.imshow(votes.astype(float), cmap='Reds', alpha=np.where(votes > 5, 0.5, 0))
-            plt.plot([best_loc[1]], [best_loc[0]], '*')
+            if best_loc is not None:
+                plt.plot([best_loc[1]], [best_loc[0]], '*')
             plt.show()
     elif detect == 'contour-sk':
         raise NotImplementedError
@@ -78,19 +79,19 @@ def get_ball(rgb_img, detect='edge', preprocess='thresh', plot=False):
             
 
 
-# with open('test_ims2.pkl','rb') as f:
-#     images = pkl.load(f)
+with open('test_ims2.pkl','rb') as f:
+    images = pkl.load(f)
     
-# # temp = np.array(images[:,:,:,0])
-# # images[:,:,:,0] = images[:,:,:,2]
-# # images[:,:,:,2] = temp
-# images[:,:,:,0], images[:,:,:,2] = images[:,:,:,2], images[:,:,:,0]
+# temp = np.array(images[:,:,:,0])
+# images[:,:,:,0] = images[:,:,:,2]
+# images[:,:,:,2] = temp
+images[:,:,:,0], images[:,:,:,2] = images[:,:,:,2], images[:,:,:,0]
 
-# dm = 'contour'
-# for i in range(len(images)):
-#     print(get_ball(images[i], plot=True, detect=dm))
-# print(get_ball(images[-2], plot=True, detect=dm))
-# print(get_ball(images[-1], plot=True, detect=dm))
+dm = 'edge'
+for i in range(len(images)):
+    print(get_ball(images[i], plot=True, detect=dm))
+print(get_ball(images[-2], plot=True, detect=dm))
+print(get_ball(images[-1], plot=True, detect=dm))
 
 
 # start = time()
@@ -100,53 +101,53 @@ def get_ball(rgb_img, detect='edge', preprocess='thresh', plot=False):
 
 
 # # Get video capture object for camera 0
-cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(0)
 
-# Create named window for diaply
-# cv2.namedWindow('preview')
+# # Create named window for diaply
+# # cv2.namedWindow('preview')
 
-ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser.flush()
+# ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+# ser.flush()
 
-# Loop until 'q' pressed
-while(True):
-    # Read most recent frame
-    ret, frame = cap.read()
+# # Loop until 'q' pressed
+# while(True):
+#     # Read most recent frame
+#     ret, frame = cap.read()
 
-    loc = get_ball(frame, detect='edge')
-    print(loc)
-    if loc is None:
-        ser.write('B\n'.encode('UTF-8'))
-        # if np.random.random() < 0.3:
-        #     ser.write('F\n'.encode('UTF-8'))
-        # else:
-        #     ser.write('L\n'.encode('UTF-8'))
-    else:
-        if loc[1] < 360 and loc[1] > 280:
-            ser.write('F\n'.encode('UTF-8'))
-        elif loc[1] > 360:
-            ser.write('R\n'.encode('UTF-8'))
-        else:
-            ser.write('L\n'.encode('UTF-8'))
+#     loc = get_ball(frame, detect='edge')
+#     print(loc)
+#     if loc is None:
+#         ser.write('B\n'.encode('UTF-8'))
+#         # if np.random.random() < 0.3:
+#         #     ser.write('F\n'.encode('UTF-8'))
+#         # else:
+#         #     ser.write('L\n'.encode('UTF-8'))
+#     else:
+#         if loc[1] < 360 and loc[1] > 280:
+#             ser.write('F\n'.encode('UTF-8'))
+#         elif loc[1] > 360:
+#             ser.write('R\n'.encode('UTF-8'))
+#         else:
+#             ser.write('L\n'.encode('UTF-8'))
 
-    # Convert to grayscale
-    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     # Convert to grayscale
+#     # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Computer Vision Code
-    # --------------------
-    # thresh = 128
-    # ret, binary = cv2.threshold(gray, thresh, 255, cv2.THRESH_BINARY)
-    # --------------------
+#     # Computer Vision Code
+#     # --------------------
+#     # thresh = 128
+#     # ret, binary = cv2.threshold(gray, thresh, 255, cv2.THRESH_BINARY)
+#     # --------------------
 
-    # Display the resulting frame
-    # cv2.imshow('preview', binary)
+#     # Display the resulting frame
+#     # cv2.imshow('preview', binary)
 
-    # Wait for a keypress, and quit if 'q'
-    # if cv2.waitKey(1) & 0xFF == ord('q'):
-    #     break
+#     # Wait for a keypress, and quit if 'q'
+#     # if cv2.waitKey(1) & 0xFF == ord('q'):
+#     #     break
 
-# Release the caputre
-cap.release()
+# # Release the caputre
+# cap.release()
 
-# Destroy display window
-# cv2.destroyAllWindows()
+# # Destroy display window
+# # cv2.destroyAllWindows()
