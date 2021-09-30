@@ -1,0 +1,52 @@
+Team layout:
+
+	- 1 Goalie
+		- blow on sight of blue team or ball
+		- play music
+
+	- 2 attackers:
+		- Find ball
+		- Find goal
+
+	- 2 defenders:
+		- Find ball
+		- Push/blow ball towards other goal
+		- Limit movement
+
+Common functions:
+
+    - is_stuck (arduino)
+    - is_stuck (rpi)
+	- is_teammate (rpi)
+	- is_oppo_team (rpi)
+	- is_ball (rpi)
+	- find_ball (rpi)
+	    - if don't see ball after x_seoconds turning, move a little forward, turn again, repeat.
+	- has_ball (rpi)
+	- move_to_ball (arduino)
+	- is_own_goal (rpi)
+	- is_oppo_goal (rpi)
+	- move_to_goal (arduino)
+	- power_fan (arduino)
+	- limit_movement (arduino)
+
+	- ignore_smaller_ball (rpi)
+	
+General behavior:
+
+	- Arduino (main loop)
+		- is_stuck
+		- move_to_ball
+		- move_to_goal
+		- power_fan
+		- limit_movement
+
+	- Rpi:
+		- is_stuck
+		- is_teammate
+		- is_oppo_team
+		- is_ball
+		- find_ball
+		- has_ball
+		- is_own_goal
+		- is_oppo_goal
