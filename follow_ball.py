@@ -16,13 +16,13 @@ def grayscale(rgb_img):
 def threshold(rgb_img):
     return (rgb_img[:, :, 0] > 150) * (rgb_img[:, :, 1] < 70)
 
-def get_ball(rgb_img, detect='edge', plot=False):
-    img_to_use = threshold(rgb_img)
+def get_ball(rgb_img, detect='edge', preprocess='thresh', plot=False):
+    img_to_use = threshold(rgb_img) if preprocess == 'thresh' else grayscale(rgb_img)
     height, width = img_to_use.shape
 
     if detect == 'edge':
         edge_map = ss.convolve2d(img_to_use, np.array([[-1-1j, -1j, 1-1j], [-1, 0, 1], [-1+1j, 1j, 1+1j]]))[1:-1, 1:-1]
-        edge_mask = np.abs(edge_map) > 2.3 #35
+        edge_mask = np.abs(edge_map) > 2.3 if preprocess == 'thresh' else 35
         edge_inds = np.where(edge_mask)
         cos = np.cos(np.angle(edge_map)[edge_mask])
         sin = np.sin(np.angle(edge_map)[edge_mask])
@@ -113,7 +113,7 @@ while(True):
     # Read most recent frame
     ret, frame = cap.read()
 
-    loc = get_ball(frame, detect='contour')
+    loc = get_ball(frame, detect='edge')
     print(loc)
     if loc is None:
         ser.write('B\n'.encode('UTF-8'))
