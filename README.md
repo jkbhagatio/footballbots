@@ -2,7 +2,7 @@
 
 NoBlackBoxes team code repo
 
-Team_Peter's Posy_ ?
+Team... _Peter's Posy_ ?
 
 # To-do
 1. Team name
