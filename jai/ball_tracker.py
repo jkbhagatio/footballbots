@@ -78,6 +78,19 @@ def main():
         raise ValueError
             #print(f'{args['ball-color']} is not a valid color')
     hsv_upper = (255, 255, 255)
+    
+    # RGB threshold values
+    lower_rgb_ball = (100,0,50)
+    upper_rgb_ball = (255,70,200)
+
+    lower_rgb_yellow = (180,120,50)
+    upper_rgb_yellow = (220,160,80)
+    
+    lower_rgb_green = (50,50,30)
+    upper_rgb_green = (110,120,60)
+    
+    lower_rgb_blue = (10,40,80)
+    upper_rgb_blue = (35,70,170)
 
     # Set up video writer if specified
     #if ((args['write_file'] is not None) or args['write_stream']):
