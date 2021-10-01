@@ -54,7 +54,6 @@ def main():
         'lower_rgb_green': (50, 50, 50),
         'upper_rgb_green': (110, 120, 60),
     }
-    pdb.set_trace()
     # Run behavior.
     behave(args, col_ranges, vs, ser)
 
@@ -94,7 +93,6 @@ def init():
 def behave(args, col_ranges, vs, ser):
     # Perform tracking and action commands to arduino frame-by-frame.
     # Set vals from args.
-    pdb.set_trace()
     PLAYER = args['player']
     FRAME_CENTER = (args['frame_size'][0] / 2, args['frame_size'][1] / 2)
     MOVE_THRESH = args['move_thresh']
@@ -121,31 +119,28 @@ def behave(args, col_ranges, vs, ser):
         #     Start turning, and compare current time to 'turn+timer.
         #     If this time exceeds 'max_turn_time', move forward for 'forward_search_time', before turning again.
         if PLAYER == 'scorer':
-            # find_ball()
-            # move_to_ball()
-            # if has_ball(): find_oppo_goal
-            # if has_ball() and sees oppo goal, blow fan and move forward.
-            # if has_ball() and doesn't see oppo goal, rotate/move until see oppo goal.
-            
+            # find_ball
             # Get frame centroid
-            #(todo: if want to test other detection methods, replace 'get_centroid' with that function) 
-            (centroid, radius) = get_centroid(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
-                                              col_ranges['upper_rgb_ball'], D_E_IT, 'ball')
+            #(todo: if want to test other detection methods, replace 'get_centroid' with that function)
+            masked_frame = (frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
+                            col_ranges['upper_rgb_ball'])
+            # todo: replace None with 'min_area'
+            (centroid, radius) = get_centroid(masked_frame, D_E_IT, 'ball', None)
+            see_ball = True if centroid is not None else False
+            if see_ball:
+                move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
+            else:
+                #explore()
+                pass
+            # if has_ball: find_oppo_goal
+            # if has_ball and sees oppo goal, blow fan and move forward.
+            # if has_ball and doesn't see oppo goal, rotate/move until see oppo goal.
+            
+            
             # Send to serial:
             # If (x - frame_center) < abs(move threshold): move forward;
             # elif (x - frame_center) > abs(move_threshold) but < abs(sight_threshold): move in appropriate direction
             # elif (x - frame_center) > abs(sight_threshold), turn in place within time threshold
-            if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
-                last_cmd = send_serial('f', last_cmd, ser)
-            elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
-                   and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):  # go right-forward
-                if centroid[0] < FRAME_CENTER[0]:
-                    last_cmd = send_serial('r', last_cmd, ser)
-                else:  # go left-forward
-                    last_cmd = send_serial('l', last_cmd, ser)
-            else:  # turn in place
-                c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
-                last_cmd = send_serial(c, last_cmd, ser)
         elif PLAYER == 'defender':
             # find_ball()
             # if sees_ball and doesn't see own goal, blow ball
@@ -163,39 +158,50 @@ def behave(args, col_ranges, vs, ser):
     cv2.destroyAllWindows()
 
 
+def see_obj():
+    pass
+
+
+def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
+    if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
+        last_cmd = send_serial('f', last_cmd, ser)
+    elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
+        and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):
+        if centroid[0] < FRAME_CENTER[0]:  # go right-forward
+            last_cmd = send_serial('r', last_cmd, ser)
+        else:  # go left-forward
+            last_cmd = send_serial('l', last_cmd, ser)
+#     else:  # turn in place
+#         c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
+#         last_cmd = send_serial(c, last_cmd, ser)
+
+    
 # Tracking on single image: looks for centroid of `obj` (a ball, goal, or oppo bot)
 # Steps: 1) blur; 2) convert to color space; 3) mask based on
 # upper and lower color space bounds; 4) dilate; 5) erode; 6) find contours;
 # 7) find largest contour; 8) compute min enclosing circle and its center
 # todo: if...else on 'obj' (ball, oppo player, our goal, oppo goal)
 # todo: define min_area the different obj
-def get_centroid(frame, gauss_filt_params, lower, upper, d_e_it, obj, min_area):
-    if obj == 'ball':
-        gauss_blurred_frame = (
+def mask_frame(frame, gauss_filt_params, lower, upper):
+    gauss_blurred_frame = (
             cv2.GaussianBlur(frame, (gauss_filt_params[0], gauss_filt_params[1]), gauss_filt_params[2]))
-        col_space_frame = cv2.cvtColor(gauss_blurred_frame, cv2.COLOR_BGR2RGB)
-        masked_frame = cv2.inRange(col_space_frame, lower, upper)
-        dilated_frame = cv2.dilate(masked_frame, None, iterations=d_e_it)
-        eroded_frame = cv2.erode(dilated_frame, None, iterations=d_e_it)
-        contours = cv2.findContours(eroded_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = imutils.grab_contours(contours)
-        center = (10000, 10000)  # initialize high (ball not found)
-        radius = 0
-        # Only proceed with tracking if contours found in this frame
-        if len(contours) > 0:
-            max_contour = max(contours, key=cv2.contourArea)
-            ((x, y), radius) = cv2.minEnclosingCircle(max_contour)
-            center = np.round((x,y)).astype(int)
-    elif obj == 'oppo_goal':
-        #todo
-        pass
-    elif obj == 'own_goal':
-        #todo
-        pass
-    elif obj == 'oppo_bot':
-        #todo
-        pass
-    
+    col_space_frame = cv2.cvtColor(gauss_blurred_frame, cv2.COLOR_BGR2RGB)
+    masked_frame = cv2.inRange(col_space_frame, lower, upper)
+    return masked_frame
+
+def get_centroid(masked_frame, d_e_it, min_area):
+    dilated_frame = cv2.dilate(masked_frame, None, iterations=d_e_it)
+    eroded_frame = cv2.erode(dilated_frame, None, iterations=d_e_it)
+    contours = cv2.findContours(eroded_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = imutils.grab_contours(contours)
+    center = None  # initialize as object not found
+    radius = 0
+    # Only proceed with tracking if contours found in this frame
+    if len(contours) > 0:
+        max_contour = max(contours, key=cv2.contourArea)
+        ((x, y), radius) = cv2.minEnclosingCircle(max_contour)
+        center = np.round((x,y)).astype(int)
+
     return center, radius
 
 
