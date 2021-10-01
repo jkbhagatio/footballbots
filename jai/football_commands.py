@@ -42,21 +42,21 @@ import pdb
 
 def main():
     # Parse input args and initialize
-    args = init()
+    (args, vs, ser) = init()
     # Set color-space ranges:
     col_ranges = {
-        'lower_hsv_ball': (160, 160, 140)
-        'upper_hsv_ball': (255, 255, 255)
-        'lower_rgb_ball': (100, 0, 50)
-        'upper_rgb_ball': (255, 70, 200)
-        'lower_rgb_yellow': (180, 120, 50)
-        'upper_rgb_yellow': (220, 160, 80)
-        'lower_rgb_green': (50, 50, 50)
-        'upper_rgb_green': (110, 120, 60)
+        'lower_hsv_ball': (160, 160, 140),
+        'upper_hsv_ball': (255, 255, 255),
+        'lower_rgb_ball': (100, 0, 50),
+        'upper_rgb_ball': (255, 70, 200),
+        'lower_rgb_yellow': (180, 120, 50),
+        'upper_rgb_yellow': (220, 160, 80),
+        'lower_rgb_green': (50, 50, 50),
+        'upper_rgb_green': (110, 120, 60),
     }
     pdb.set_trace()
     # Run behavior.
-    behave(args, col_ranges)
+    behave(args, col_ranges, vs, ser)
 
 
 def init():
@@ -79,7 +79,6 @@ def init():
     
     # Initialize serial.
     ser = serial.Serial('/dev/ttyUSB0', 57600, timeout=1)
-    last_command = '0'  # last command placeholder
     input("Run arduino code, then press any key to continue")
     
     # Initialize video.
@@ -89,10 +88,10 @@ def init():
     else:
         vs = cv2.VideoCapture(args['video'])
 
-    return args
+    return args, vs, ser
 
 
-def behave(args, col_ranges):
+def behave(args, col_ranges, vs, ser):
     # Perform tracking and action commands to arduino frame-by-frame.
     # Set vals from args.
     pdb.set_trace()
@@ -137,22 +136,24 @@ def behave(args, col_ranges):
             # elif (x - frame_center) > abs(move_threshold) but < abs(sight_threshold): move in appropriate direction
             # elif (x - frame_center) > abs(sight_threshold), turn in place within time threshold
             if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
-                last_cmd = send_serial('f', last_cmd)
+                last_cmd = send_serial('f', last_cmd, ser)
             elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
                    and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):  # go right-forward
                 if centroid[0] < FRAME_CENTER[0]:
-                    last_cmd = send_serial('r', last_cmd)
+                    last_cmd = send_serial('r', last_cmd, ser)
                 else:  # go left-forward
-                    last_cmd = send_serial('l', last_cmd)
+                    last_cmd = send_serial('l', last_cmd, ser)
             else:  # turn in place
                 c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
-                last_cmd = send_serial(c, last_cmd)
+                last_cmd = send_serial(c, last_cmd, ser)
         elif PLAYER == 'defender':
             # find_ball()
             # if sees_ball and doesn't see own goal, blow ball
             # if sees oppo_bot, attack?
+            pass
         elif PLAYER == 'goalie':
             # move near goalline and blow ball away from goal? ensure min movement requirement is satisfied
+            pass
     
     # End behavior: stop the stream or release the camera:
     if args['video'] is None:
@@ -187,16 +188,19 @@ def get_centroid(frame, gauss_filt_params, lower, upper, d_e_it, obj, min_area):
             center = np.round((x,y)).astype(int)
     elif obj == 'oppo_goal':
         #todo
+        pass
     elif obj == 'own_goal':
         #todo
+        pass
     elif obj == 'oppo_bot':
         #todo
+        pass
     
     return center, radius
 
 
 # Sends a command to serial if the command is different from the previous command sent
-def send_serial(c, last_cmd):
+def send_serial(c, last_cmd, ser):
     if last_cmd != c:
         ser.write(c.encode('utf-8'))
         last_cmd = c
