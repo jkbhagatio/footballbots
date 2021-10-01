@@ -54,6 +54,7 @@ def main():
         'lower_rgb_green': (50, 50, 50)
         'upper_rgb_green': (110, 120, 60)
     }
+    pdb.set_trace()
     # Run behavior.
     behave(args, col_ranges)
 
@@ -94,6 +95,7 @@ def init():
 def behave(args, col_ranges):
     # Perform tracking and action commands to arduino frame-by-frame.
     # Set vals from args.
+    pdb.set_trace()
     PLAYER = args['player']
     FRAME_CENTER = (args['frame_size'][0] / 2, args['frame_size'][1] / 2)
     MOVE_THRESH = args['move_thresh']
