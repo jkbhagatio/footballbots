@@ -22,16 +22,6 @@ typedef struct {
 
 Motor motors[2];  // 0 is left, 1 is right.
 
-// SET PINS!
-motors[0].power_pin = 10; 
-motors[0].logic_pins[0] = 12; 
-motors[0].logic_pins[1] = 11; 
-motors[0].interrupt_pin = 3;
-motors[1].power_pin = 6; 
-motors[1].logic_pins[0] = 7; 
-motors[1].logic_pins[1] = 8; 
-motors[1].interrupt_pin = 2;
-
 // Sets up pinmodes for a motor.
 void setup_motor_pinmode(int i) {
     pinMode(motors[i].power_pin, OUTPUT);
@@ -51,9 +41,20 @@ int STUCK_T = 1500;  // threshold time (ms) for interrupt not being triggered ->
 void setup() {
     Serial.begin(57600);
     // Set up pinmodes.
+    
+    // SET PINS!
+    motors[0].power_pin = 10; 
+    motors[0].logic_pins[0] = 12; 
+    motors[0].logic_pins[1] = 11; 
+    motors[0].interrupt_pin = 3;
+    motors[1].power_pin = 6; 
+    motors[1].logic_pins[0] = 7; 
+    motors[1].logic_pins[1] = 8; 
+    motors[1].interrupt_pin = 2;
+
     for (int i = 0; i < 2; i++) setup_motor_pinmode(i);
-    attachInterrupt(digitalPinToInterrupt(motors[0].interruptPin), interruptL, RISING);
-    attachInterrupt(digitalPinToInterrupt(motors[1].interruptPin), interruptR, RISING);
+    attachInterrupt(digitalPinToInterrupt(motors[0].interrupt_pin), interruptL, RISING);
+    attachInterrupt(digitalPinToInterrupt(motors[1].interrupt_pin), interruptR, RISING);
 }
 
 void loop() {
@@ -62,27 +63,27 @@ void loop() {
 }
 
 void interruptL() {
-  motors[0].crossTime = millis();
+  motors[0].crosstime = millis();
 }
 
 void interruptR() {
-  motors[0].crossTime = millis();
+  motors[0].crosstime = millis();
 }
 
 void set_motor_dir(int m, int dir) {
   motors[m].dir = dir;
   switch (dir) {
     case 1:  // forward
-      digitalWrite(motors[m].logicPins[0], HIGH);
-      digitalWrite(motors[m].logicPins[1], LOW);
+      digitalWrite(motors[m].logic_pins[0], HIGH);
+      digitalWrite(motors[m].logic_pins[1], LOW);
       break;
     case -1:  // backward
-      digitalWrite(motors[m].logicPins[0], LOW);
-      digitalWrite(motors[m].logicPins[1], HIGH);
+      digitalWrite(motors[m].logic_pins[0], LOW);
+      digitalWrite(motors[m].logic_pins[1], HIGH);
       break;
     case 0:  // brake
-      digitalWrite(motors[m].logicPins[0], LOW);
-      digitalWrite(motors[m].logicPins[1], LOW);
+      digitalWrite(motors[m].logic_pins[0], LOW);
+      digitalWrite(motors[m].logic_pins[1], LOW);
       break;
   }
 }
@@ -92,7 +93,7 @@ void set_motor_pow(int m, int pwm) {
 }
 
 void unstick() {
-    if (millis() > (max(motor_l_crosstime, motor_r_crosstime) + STUCK_T)) {
+    if (millis() > (max(motors[0].crosstime, motors[1].crosstime) + STUCK_T)) {
         // Flip direction of both motors.
         flip_motor_dir(0); flip_motor_dir(1);
         // If stuck in oppo direction, randomly flip one motor to turn.
@@ -115,23 +116,43 @@ void flip_motor_dir(int i) {
 }
 
 // Listens to pi to move towards ball
+// (On pi, if we don't see the ball after 
 void move_to_ball() {
     if (Serial.available() > 0) {
         char c = Serial.read();
         if (c == 'r') {  // forward right
-            forward_right();
+            set_motor_pow(0, 255);
+            set_motor_pow(1, 127);
+            set_motor_dir(0, 1);
+            set_motor_dir(1, 1);
         }
         if (c == 'l') {  // forward left
-            forward_left();
+            set_motor_pow(0, 127);
+            set_motor_pow(1, 255);
+            set_motor_dir(0, 1);
+            set_motor_dir(1, 1);
         }
         if (c == 'f') {  // directly forward
-            forward();
+            set_motor_pow(0, 255);
+            set_motor_pow(1, 255);
+            set_motor_dir(0, 1);
+            set_motor_dir(1, 1);
         }
-        if (c == 't') {  // turn
-            turn_left();
+        if (c == 'a') {  // turn left in place
+            set_motor_pow(0, 127);
+            set_motor_pow(1, 255);
+            set_motor_dir(0, -1);
+            set_motor_dir(1, 1);
+        }
+        if (c == 'd') {  // turn right in place
+            set_motor_pow(0, 255);
+            set_motor_pow(1, 127);
+            set_motor_dir(0, -1);
+            set_motor_dir(1, 1);
         }
         if (c == 's') {  // stop
-            stopit();
+            set_motor_dir(0, 0);
+            set_motor_dir(0, 0);
         }
     }
 }

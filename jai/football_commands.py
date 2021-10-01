@@ -33,7 +33,16 @@ import cv2
 import pdb
 
 def main():
+    
+    # parse_args and initialize
+    # while loop (frame-by-frame):
+    #     quit if end of video or 'q' key
+    #     get centroid of ball (if you can't turn, if keep turning for X time, move forward)
+    #     (make sure ball is not too close to be out of frame)
+    #     
+    
     ap = argparse.ArgumentParser()
+    ap.add_argument("--position", help="goalie, attacker, defender")
     ap.add_argument("--video", default=None, help="path to the (optional) video file")
     ap.add_argument("--frame-size", default=[640, 480], help="frame size of frames in video")
     ap.add_argument("--ball-color", default='pink', help="ball color ('pink' or 'cyan')")
@@ -42,7 +51,7 @@ def main():
     ap.add_argument("--deque-buffer-size", type=int, default=16, help="max buffer size")
     ap.add_argument("--gaussian-filter-params", default=[5, 5, 1], help="3 numbers: filter kernel width, height, and sigma (default: [5, 5, 1])")
     ap.add_argument("--min-ball-radius", default=10, help="pixels for ball radius for visualization of tracking")
-    ap.add_argument("--send-serial", default=False, help="send position of ball relative to center to serial")
+    ap.add_argument("--send-serial", default=True, help="send position of ball relative to center to serial")
     ap.add_argument("--move-thresh", default=30, help="pixels threshold for determining movement")
     ap.add_argument("--sight-thresh", default=300, help="pixels threshold for determining movement")
 

@@ -35,18 +35,19 @@ Common functions:
 General behavior:
 
 	- Arduino (main loop)
-		- unstick
-		- move_to_ball
+		- unstick [x]
+		- move_to_ball [x]
 		- move_to_goal
 		- power_fan
 		- limit_movement
 
 	- Rpi:
 		- unstick
-		- is_teammate
-		- is_oppo_team
 		- is_ball
 		- find_ball
 		- has_ball
 		- is_own_goal
 		- is_oppo_goal
+                - is_teammate
+		- is_oppo_team
+
