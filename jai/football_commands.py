@@ -123,13 +123,17 @@ def behave(args, col_ranges, vs, ser):
             # objects?
             # Get frame centroid
             #(todo: if want to test other detection methods, replace 'get_centroid' with that function)
-            masked_frame = mask_frame(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
+            masked_frame_ball = mask_frame(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
                                       col_ranges['upper_rgb_ball'])
             # todo: replace 'None' with 'min area'
-            (centroid, radius) = get_centroid(masked_frame, D_E_IT, None)
-            see_ball = True if centroid is not None else False
+            (centroid_ball, radius_ball) = get_centroid(masked_frame_ball, D_E_IT, None)
+            see_ball = True if centroid_ball is not None else False
             if see_ball:
-                last_cmd = move_to_obj(centroid, FRAME_CENTER, MOVE_THRESH, SIGHT_THRESH, ser, last_cmd)
+                last_cmd = move_to_obj(centroid_ball, FRAME_CENTER, MOVE_THRESH, SIGHT_THRESH, ser, last_cmd)
+                if has_ball():
+                    send_serial('p', last_cmd, ser)
+                else:
+                    send_serial('o', last_cmd, ser)
             else:
                 last_cmd = send_serial(random.choice(['a', 'd']), last_cmd, ser)  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
                 time.sleep(2)
@@ -207,6 +211,10 @@ def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, last_cmd
         else:  # go left-forward
             last_cmd = send_serial('l', last_cmd, ser)
     return last_cmd
+
+
+def has_ball():
+    pass
 
 
 def explore():
