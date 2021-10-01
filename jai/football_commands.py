@@ -112,16 +112,17 @@ def behave(args, col_ranges, vs, ser):
             break
         if cv2.waitKey(0) & 0xFF == ord('q'):
             break
-        # todo: define precise behavior for all player types
-        # todo: functions for `find_ball()`, `has_ball()`, `find_oppo_goal()`, `see_oppo_player()`
+        # todo: define precise behavior for all player types: some ideas:
+        # 1) has ball, 2) find oppo goal, 3) find own goal, 4) find oppo player, 5) explore
+        # all motion is done via `move_to_obj()`
         if PLAYER == 'scorer':
-            # Find ball
+            # Find ball: (can reuse `mask_frame()` with different color space ranges for different
+            # objects?
             # Get frame centroid
             #(todo: if want to test other detection methods, replace 'get_centroid' with that function)
             masked_frame = mask_frame(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
                                       col_ranges['upper_rgb_ball'])
-            # todo: replace None with 'min_area'
-            pdb.set_trace()
+            # todo: replace 'None' with 'min area'
             (centroid, radius) = get_centroid(masked_frame, D_E_IT, None)
             see_ball = True if centroid is not None else False
             if see_ball:
