@@ -124,7 +124,7 @@ def behave(args, col_ranges, vs, ser):
             # Get frame centroid
             #(todo: if want to test other detection methods, replace 'get_centroid' with that function)
             masked_frame_ball = mask_frame(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
-                                      col_ranges['upper_rgb_ball'])
+                                           col_ranges['upper_rgb_ball'])
             # todo: replace 'None' with 'min area'
             (centroid_ball, radius_ball) = get_centroid(masked_frame_ball, D_E_IT, None)
             see_ball = True if centroid_ball is not None else False
