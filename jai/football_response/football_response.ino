@@ -51,11 +51,12 @@ void setup() {
     motors[1].logic_pins[0] = 7; 
     motors[1].logic_pins[1] = 8; 
     motors[1].interrupt_pin = 2;
-    int fan_pin;  //todo: needs to be set.
+    int fan_pin = 13;  //todo: needs to be set.
 
     for (int i = 0; i < 2; i++) setup_motor_pinmode(i);
     attachInterrupt(digitalPinToInterrupt(motors[0].interrupt_pin), interruptL, RISING);
     attachInterrupt(digitalPinToInterrupt(motors[1].interrupt_pin), interruptR, RISING);
+    pinMode(fan_pin, OUTPUT);
 }
 
 void loop() {
@@ -155,8 +156,12 @@ void act() {
             set_motor_dir(0, 0);
             set_motor_dir(0, 0);
         }
-        if (c == 'f') {  // blow fan
+        if (c == 'p') {  // blow fan
+            digitalWrite(fan_pin, HIGH);
             //todo: do something with fan pin for X amount of time.
+        }
+        if (c == 'o') { // stop fan
+            digitalWrite(fan_pin, LOW);
         }
     }
 }
