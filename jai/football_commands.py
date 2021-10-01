@@ -89,6 +89,7 @@ def init():
         vs = VideoStream(resolution=args['camera_resolution'], framerate=args['fps'], usePiCamera=True, src=0).start()
     else:
         vs = cv2.VideoCapture(args['video'])
+    time.sleep(1.5)  # give time for cam to warm up
 
     return args, vs, ser
 
@@ -107,7 +108,6 @@ def behave(args, col_ranges, vs, ser):
     turn_timer = time.time()
     # While we haven't terminated the video stream, or while video file still has frames...:
     while True:
-        pdb.set_trace()
         frame = vs.read()  # grab the current frame
         #frame = frame[1] if not (args['video'] is None) else frame  # handle frame from video file or stream
         # Break on empty frame or 'q' key
@@ -129,7 +129,7 @@ def behave(args, col_ranges, vs, ser):
             (centroid, radius) = get_centroid(masked_frame, D_E_IT, None)
             see_ball = True if centroid is not None else False
             if see_ball:
-                last_cmd = move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd)
+                last_cmd = move_to_obj(centroid, FRAME_CENTER, MOVE_THRESH, SIGHT_THRESH, ser, last_cmd)
             else:
                 last_cmd = send_serial(random.choice(['a', 'd']), last_cmd, ser)  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
                 time.sleep(2)
@@ -197,12 +197,12 @@ def see_obj():
     pass
 
 
-def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
-    if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
+def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, last_cmd):
+    if abs(centroid[0] - frame_center[0]) < move_thresh:  # go forward
         last_cmd = send_serial('f', last_cmd, ser)
-    elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
-        and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):
-        if centroid[0] < FRAME_CENTER[0]:  # go right-forward
+    elif ((abs(centroid[0] - frame_center[0]) > move_thresh)
+        and (abs(centroid[0] - frame_center[0]) < sight_thresh)):
+        if centroid[0] < frame_center[0]:  # go right-forward
             last_cmd = send_serial('r', last_cmd, ser)
         else:  # go left-forward
             last_cmd = send_serial('l', last_cmd, ser)
