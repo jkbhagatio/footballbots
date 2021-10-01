@@ -103,6 +103,7 @@ def behave(args, col_ranges, vs, ser):
     last_cmd = None
     turn_timer = 0
     # While we haven't terminated the video stream, or while video file still has frames...:
+    pdb.set_trace()
     while True:
         frame = vs.read()  # grab the current frame
         frame = frame[1] if not (args['video'] is None) else frame  # handle frame from video file or stream
@@ -113,24 +114,25 @@ def behave(args, col_ranges, vs, ser):
             break
         # todo: define precise behavior for all player types
         # todo: functions for `find_ball()`, `has_ball()`, `find_oppo_goal()`, `see_oppo_player()`
-        # If ball not in frame:
-        #     If (cur_time - turn_timer) > max_turn_time:
-        #         move forward for 'forward_search_time'
-        #     Start turning, and compare current time to 'turn+timer.
-        #     If this time exceeds 'max_turn_time', move forward for 'forward_search_time', before turning again.
         if PLAYER == 'scorer':
-            # find_ball
+            # Find ball
             # Get frame centroid
             #(todo: if want to test other detection methods, replace 'get_centroid' with that function)
-            masked_frame = (frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
-                            col_ranges['upper_rgb_ball'])
+            masked_frame = mask_frame(frame, GAUSS_FILT_PARAMS, col_ranges['lower_rgb_ball'],
+                                      col_ranges['upper_rgb_ball'])
             # todo: replace None with 'min_area'
-            (centroid, radius) = get_centroid(masked_frame, D_E_IT, 'ball', None)
+            pdb.set_trace()
+            (centroid, radius) = get_centroid(masked_frame, D_E_IT, None)
             see_ball = True if centroid is not None else False
             if see_ball:
-                move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
+                last_cmd = move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd)
             else:
-                #explore()
+                #explore():
+                # If ball not in frame:
+                # If (cur_time - turn_timer) > max_turn_time:
+                # move forward for 'forward_search_time'
+                # Start turning, and compare current time to 'turn+timer.
+                # If this time exceeds 'max_turn_time', move forward for 'forward_search_time', before turning again.
                 pass
             # if has_ball: find_oppo_goal
             # if has_ball and sees oppo goal, blow fan and move forward.
@@ -156,24 +158,6 @@ def behave(args, col_ranges, vs, ser):
     else:
         vs.release()
     cv2.destroyAllWindows()
-
-
-def see_obj():
-    pass
-
-
-def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
-    if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
-        last_cmd = send_serial('f', last_cmd, ser)
-    elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
-        and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):
-        if centroid[0] < FRAME_CENTER[0]:  # go right-forward
-            last_cmd = send_serial('r', last_cmd, ser)
-        else:  # go left-forward
-            last_cmd = send_serial('l', last_cmd, ser)
-#     else:  # turn in place
-#         c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
-#         last_cmd = send_serial(c, last_cmd, ser)
 
     
 # Tracking on single image: looks for centroid of `obj` (a ball, goal, or oppo bot)
@@ -204,6 +188,24 @@ def get_centroid(masked_frame, d_e_it, min_area):
 
     return center, radius
 
+
+def see_obj():
+    pass
+
+
+def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd):
+    if abs(centroid[0] - FRAME_CENTER[0]) < MOVE_THRESH:  # go forward
+        last_cmd = send_serial('f', last_cmd, ser)
+    elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
+        and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):
+        if centroid[0] < FRAME_CENTER[0]:  # go right-forward
+            last_cmd = send_serial('r', last_cmd, ser)
+        else:  # go left-forward
+            last_cmd = send_serial('l', last_cmd, ser)
+    return last_cmd
+#     else:  # turn in place
+#         c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
+#         last_cmd = send_serial(c, last_cmd, ser)
 
 # Sends a command to serial if the command is different from the previous command sent
 def send_serial(c, last_cmd, ser):
