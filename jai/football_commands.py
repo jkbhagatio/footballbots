@@ -73,6 +73,9 @@ def init():
     ap.add_argument("--sight-thresh", default=300, help="pixels threshold for determining movement")
     ap.add_argument("--max-turn-time", default=5, help="max time (in s) for turning to look for ball, before moving forward")
     ap.add_argument("--forward-search-time", default=2, help="max time (in s) for moving forward to look for ball before turning")
+    ap.add_argument("--d-e-it", default=1, help="dilation erosion iterations during cv")
+    ap.add_argument("--fps", default=20, help="fps")
+    ap.add_argument("--camera-resolution", default=(640, 480))
 
     args = vars(ap.parse_known_args()[0])
     
@@ -83,7 +86,7 @@ def init():
     # Initialize video.
     # If vid file not specified, get webstream, else get vid file.
     if args['video'] is None:
-        vs = VideoStream(resolution=(640, 480), framerate=20, usePiCamera=True, src=0).start()
+        vs = VideoStream(resolution=args['camera_resolution'], framerate=args['fps'], usePiCamera=True, src=0).start()
     else:
         vs = cv2.VideoCapture(args['video'])
 
@@ -99,18 +102,18 @@ def behave(args, col_ranges, vs, ser):
     SIGHT_THRESH = args['sight_thresh']
     GAUSS_FILT_PARAMS = args['gaussian_filter_params']
     MIN_PX_BALL_RAD = args['min_ball_radius']
-    D_E_IT = 2;  # dilation/erosion iterations
+    D_E_IT = args['d_e_it'];  # dilation/erosion iterations
     last_cmd = None
-    turn_timer = 0
+    turn_timer = time.time()
     # While we haven't terminated the video stream, or while video file still has frames...:
-    pdb.set_trace()
     while True:
+        pdb.set_trace()
         frame = vs.read()  # grab the current frame
-        frame = frame[1] if not (args['video'] is None) else frame  # handle frame from video file or stream
+        #frame = frame[1] if not (args['video'] is None) else frame  # handle frame from video file or stream
         # Break on empty frame or 'q' key
         if frame is None:
             break
-        if cv2.waitKey(0) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         # todo: define precise behavior for all player types: some ideas:
         # 1) has ball, 2) find oppo goal, 3) find own goal, 4) find oppo player, 5) explore
@@ -128,18 +131,18 @@ def behave(args, col_ranges, vs, ser):
             if see_ball:
                 last_cmd = move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, last_cmd)
             else:
+                last_cmd = send_serial(random.choice(['a', 'd']), last_cmd, ser)  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
+                time.sleep(2)
+                last_cmd = send_serial('f', last_cmd, ser)
                 #explore():
-                # If ball not in frame:
                 # If (cur_time - turn_timer) > max_turn_time:
                 # move forward for 'forward_search_time'
                 # Start turning, and compare current time to 'turn+timer.
                 # If this time exceeds 'max_turn_time', move forward for 'forward_search_time', before turning again.
-                pass
+                #pass
             # if has_ball: find_oppo_goal
             # if has_ball and sees oppo goal, blow fan and move forward.
-            # if has_ball and doesn't see oppo goal, rotate/move until see oppo goal.
-            
-            
+            # if has_ball and doesn't see oppo goal, rotate/move until see oppo goal.        
             # Send to serial:
             # If (x - frame_center) < abs(move threshold): move forward;
             # elif (x - frame_center) > abs(move_threshold) but < abs(sight_threshold): move in appropriate direction
@@ -169,7 +172,7 @@ def behave(args, col_ranges, vs, ser):
 # todo: define min_area the different obj
 def mask_frame(frame, gauss_filt_params, lower, upper):
     gauss_blurred_frame = (
-            cv2.GaussianBlur(frame, (gauss_filt_params[0], gauss_filt_params[1]), gauss_filt_params[2]))
+        cv2.GaussianBlur(frame, (gauss_filt_params[0], gauss_filt_params[1]), gauss_filt_params[2]))
     col_space_frame = cv2.cvtColor(gauss_blurred_frame, cv2.COLOR_BGR2RGB)
     masked_frame = cv2.inRange(col_space_frame, lower, upper)
     return masked_frame
@@ -204,10 +207,15 @@ def move_to_obj(centroid, frame_center, move_thresh, sight_thresh, ser, cmd, las
         else:  # go left-forward
             last_cmd = send_serial('l', last_cmd, ser)
     return last_cmd
+
+
+def explore():
 #     else:  # turn in place
 #         c = random.choice(['a', 'd'])  # 'a' for turn left, 'd' for turn right (equivalent to arrow keys)
-#         last_cmd = send_serial(c, last_cmd, ser)
-
+#         
+    pass
+    
+    
 # Sends a command to serial if the command is different from the previous command sent
 def send_serial(c, last_cmd, ser):
     if last_cmd != c:

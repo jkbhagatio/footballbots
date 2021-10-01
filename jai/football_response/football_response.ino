@@ -87,7 +87,7 @@ void set_motor_dir(int m, int dir) {
       digitalWrite(motors[m].logic_pins[0], LOW);
       digitalWrite(motors[m].logic_pins[1], LOW);
       break;
-  }
+  } 
 }
 
 void set_motor_pow(int m, int pwm) {
