@@ -62,13 +62,6 @@ def main():
     MIN_PX_BALL_RAD = args['min_ball_radius']
     D_E_IT = 2;  # dilation/erosion iterations
 
-    # Initialize settings before tracking
-    # If vid not specified, get webstream, else get vid.
-    if args['video'] is None:
-        vs = VideoStream(src=0).start()
-    else:
-        vs = cv2.VideoCapture(args['video'])
-    
     # HSV ranges of ball colors found using range detector tool: `imutils_range_detector`
     if args['ball_color'] == 'cyan':
         hsv_lower = (95, 80, 115)
@@ -97,6 +90,17 @@ def main():
         #fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         #writer = cv2.VideoWriter('/home/pi/swc_bootcamp_2021/media/ben_pink_ball_tracked.mp4',
                                   #fourcc, fps=20.0, frameSize=(640,  480), isColor=True)
+    if args['write_file']:
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        writer = cv2.VideoWriter('/home/pi/swc_bootcamp_2021/media/ben_pink_ball_tracked.mp4',
+                                  fourcc, fps=20.0, frameSize=(640,  480), isColor=True)
+
+    # Initialize settings before tracking
+    # If vid not specified, get webstream, else get vid.
+    if args['video'] is None:
+        vs = VideoStream(resolution=(640, 480), framerate=20, usePiCamera=True, src=0).start()
+    else:
+        vs = cv2.VideoCapture(args['video'])
 
     # Perform tracking frame-by-frame while we haven't terminated video stream,
     # or while video file still has frames
@@ -128,17 +132,23 @@ def main():
             elif ((abs(centroid[0] - FRAME_CENTER[0]) > MOVE_THRESH)
                    and (abs(centroid[0] - FRAME_CENTER[0]) < SIGHT_THRESH)):
                 if centroid[0] < FRAME_CENTER[0]:
-                    if last_command != 'l':
-                        ser.write('l'.encode('utf-8'))
-                        last_command = 'l'
-                else:
                     if last_command != 'r':
                         ser.write('r'.encode('utf-8'))
                         last_command = 'r'
+                else:
+                    if last_command != 'l':
+                        ser.write('l'.encode('utf-8'))
+                        last_command = 'l'
             else:  # turn in place
                 if last_command != 't':
                     ser.write('t'.encode('utf-8'))
                     last_command = 't'
+        if args['write_file']:
+            writer.write(frame)
+        key = cv2.waitKey(1) & 0xFF
+        # if the 'q' key is pressed, stop the loop
+        if key == ord("q"):
+            break 
     # Stop the stream or release the camera:
     if args['video'] is None:
         vs.stop()

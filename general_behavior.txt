@@ -35,14 +35,14 @@ Common functions:
 General behavior:
 
 	- Arduino (main loop)
-		- is_stuck
+		- unstick
 		- move_to_ball
 		- move_to_goal
 		- power_fan
 		- limit_movement
 
 	- Rpi:
-		- is_stuck
+		- unstick
 		- is_teammate
 		- is_oppo_team
 		- is_ball
