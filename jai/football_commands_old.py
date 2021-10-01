@@ -1,5 +1,11 @@
 '''
-Do ball tracking from an image or webcam stream.
+The logic will be launch `python -m football_commands` in terminal, where you will see a prompt to
+upload `football_response.ino` to arduino, and then press a key to continue running 'football_commands'.
+
+ctrl+f 'todo' in each of these two files to find what we still need to do.
+
+Do computer vision to detect ball (pink), opponent (blue), opponent goal (yellow), and our goal (green).
+Based on what's detected, send commands to arduino via serial to act (see `football_response.ino`)
 
 Input args for: 1) video source, 2) ball color, 3) writing out processed stream to a file,
 4) writing out processed stream to a web server via flask, 5) contrail buffer for writing
@@ -9,11 +15,7 @@ Functions for: 1) finding centroid, 2) displaying tracking
 
 Usage examples:
 
-# Track a pink ball from a video stream without plotting the image:
-
-# Track a pink ball from a video file with default contrail buffer size, write out file.
-python -m ball_tracker --video /home/pi/swc_bootcamp_2021/media/ben_pink_ball_move.h264 --ball-color pink --send-serial True 
-
+# In terminal, `cd` to directory containing this file and run: `python -m football_commands`.
 '''
 
 # Imports
@@ -37,20 +39,18 @@ def main():
     # parse_args and initialize
     # while loop (frame-by-frame):
     #     quit if end of video or 'q' key
-    #     get centroid of ball (if you can't turn, if keep turning for X time, move forward)
+    #     get centroid of ball (if you can't turn and have been turning for X time, move forward)
     #     (make sure ball is not too close to be out of frame)
     #     
     
     ap = argparse.ArgumentParser()
-    ap.add_argument("--position", help="goalie, attacker, defender")
+    ap.add_argument("--player", help="goalie, attacker, defender")
     ap.add_argument("--video", default=None, help="path to the (optional) video file")
     ap.add_argument("--frame-size", default=[640, 480], help="frame size of frames in video")
     ap.add_argument("--ball-color", default='pink', help="ball color ('pink' or 'cyan')")
-    ap.add_argument("--write-file", default=None, help="path to name of video file to write to")
-    ap.add_argument("--write-stream", default=False, help="writes to web server stream if True")
-    ap.add_argument("--deque-buffer-size", type=int, default=16, help="max buffer size")
     ap.add_argument("--gaussian-filter-params", default=[5, 5, 1], help="3 numbers: filter kernel width, height, and sigma (default: [5, 5, 1])")
-    ap.add_argument("--min-ball-radius", default=10, help="pixels for ball radius for visualization of tracking")
+    ap.add_argument("--min-ball-radius", default=10, help="min pixels for detecting ball")
+    ap.add_argument("--min-goal-radius", default=10, help="min pixels for detecting our or opponent's goal")
     ap.add_argument("--send-serial", default=True, help="send position of ball relative to center to serial")
     ap.add_argument("--move-thresh", default=30, help="pixels threshold for determining movement")
     ap.add_argument("--sight-thresh", default=300, help="pixels threshold for determining movement")
@@ -171,6 +171,7 @@ def main():
 # upper and lower hsv bounds; 4) dilate; 5) erode; 6) find contours;
 # 7) find largest contour; 8) compute min enclosing circle and its
 # center
+# (set min area)
 def get_centroid(frame, gauss_filt_params, hsv_lower, hsv_upper, d_e_it):
     gauss_blurred_frame = (
         cv2.GaussianBlur(frame, (gauss_filt_params[0], gauss_filt_params[1]), gauss_filt_params[2]))
@@ -194,6 +195,8 @@ def get_centroid(frame, gauss_filt_params, hsv_lower, hsv_upper, d_e_it):
 def draw_frame(frame, centroid, radius):
     pass
 
+def parse_args():
+    
 
 if __name__ == '__main__':
     main()

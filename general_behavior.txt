@@ -36,7 +36,7 @@ General behavior:
 
 	- Arduino (main loop)
 		- unstick [x]
-		- move_to_ball [x]
+		- act [x]
 		- move_to_goal
 		- power_fan
 		- limit_movement

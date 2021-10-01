@@ -51,6 +51,7 @@ void setup() {
     motors[1].logic_pins[0] = 7; 
     motors[1].logic_pins[1] = 8; 
     motors[1].interrupt_pin = 2;
+    int fan_pin;  //todo: needs to be set.
 
     for (int i = 0; i < 2; i++) setup_motor_pinmode(i);
     attachInterrupt(digitalPinToInterrupt(motors[0].interrupt_pin), interruptL, RISING);
@@ -59,7 +60,8 @@ void setup() {
 
 void loop() {
     unstick();
-    move_to_ball();
+    act();
+    
 }
 
 void interruptL() {
@@ -115,9 +117,8 @@ void flip_motor_dir(int i) {
   set_motor_dir(i, -1*motors[i].dir);
 }
 
-// Listens to pi to move towards ball
-// (On pi, if we don't see the ball after 
-void move_to_ball() {
+// Listens to pi to act
+void act() {
     if (Serial.available() > 0) {
         char c = Serial.read();
         if (c == 'r') {  // forward right
@@ -153,6 +154,9 @@ void move_to_ball() {
         if (c == 's') {  // stop
             set_motor_dir(0, 0);
             set_motor_dir(0, 0);
+        }
+        if (c == 'f') {  // blow fan
+            //todo: do something with fan pin for X amount of time.
         }
     }
 }
